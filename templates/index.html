@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MediaSave - Video & Audio Converter</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(145deg,#142c58,#070e20 70%);color:#f5f7ff;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;padding:28px 6%;font-size:24px;font-weight:bold}
+header span,.accent{color:#9db8ff}
+main{max-width:750px;margin:55px auto;padding:20px;text-align:center}
+h1{font-size:clamp(38px,8vw,65px);line-height:1.12;margin:0 0 25px}
+p{color:#b6c5e2;line-height:1.7}
+.panel{text-align:left;background:#14233f;border:1px solid #354969;border-radius:24px;padding:28px;margin-top:45px}
+label{display:block;font-weight:bold;margin-bottom:14px}
+input,select{width:100%;padding:16px;border-radius:12px;border:1px solid #496183;background:#0c172b;color:white;font-size:16px;margin-bottom:15px}
+button{width:100%;padding:17px;border:0;border-radius:12px;background:#9db8ff;color:#091329;font-weight:bold;font-size:17px;cursor:pointer}
+button:disabled{opacity:.6}
+#result{margin-top:20px;overflow-wrap:anywhere}
+footer{text-align:center;color:#8294b5;padding:40px 15px}
+</style>
+</head>
+<body>
+<header><div>▶ Media<span>Save</span></div><small>VIDEO + AUDIO</small></header>
+<main>
+<h1>Your media.<br><span class="accent">Your format.</span></h1>
+<p>Convert videos you own or have permission to use.</p>
+<div class="panel">
+<label for="file">Select your video</label>
+<input type="file" id="file" accept="video/*,audio/*">
+<label for="format">Output format</label>
+<select id="format">
+<option value="mp4">MP4 Video</option>
+<option value="mp3">MP3 Audio</option>
+<option value="m4a">M4A Audio</option>
+</select>
+<button id="convert" onclick="convert()">Convert & Download</button>
+<div id="result" role="status"></div>
+</div>
+</main>
+<footer>MediaSave • Authorized content only</footer>
+<script>
+async function convert(){
+const file=document.getElementById('file').files[0];
+const format=document.getElementById('format').value;
+const result=document.getElementById('result');
+if(!file){result.textContent='Please select a file first.';return}
+result.textContent='Uploading and converting...';
+const btn=document.getElementById('convert');btn.disabled=true;
+try{
+const data=new FormData();data.append('file',file);data.append('format',format);
+const response=await fetch('/convert',{method:'POST',body:data});
+if(!response.ok)throw new Error('Server returned '+response.status+'. Check backend API.');
+const blob=await response.blob();
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');a.href=url;a.download='mediasave.'+format;
+document.body.appendChild(a);a.click();a.remove();
+setTimeout(()=>URL.revokeObjectURL(url),60000);
+result.textContent='Conversion request completed.';
+}catch(e){result.textContent='Error: '+e.message}
+finally{btn.disabled=false}
+}
+</script>
+</body>
+</html>
